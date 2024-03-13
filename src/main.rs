@@ -45,8 +45,9 @@ impl Render for ImageShowcase {
             .size_full()
             .justify_center()
             .items_center()
-            .gap_8()
-            .bg(rgb(0xFFFFFF))
+            .gap_4()
+            .bg(rgb(0x1F2126))
+            .text_color(rgb(0xffffff))
             .child(ImageContainer::new(
                 "Image loaded from a local file",
                 self.local_resource.clone(),
@@ -59,6 +60,8 @@ impl Render for ImageShowcase {
 }
 
 fn main() {
+    dotenvy::dotenv().expect(".env file not found");
+
     pretty_env_logger::env_logger::init();
 
     App::new().run(|cx: &mut AppContext| {
@@ -69,5 +72,6 @@ fn main() {
                 remote_resource: "https://picsum.photos/512/512".into(),
             })
         });
+        // cx.open_url("https://google.com");
     });
 }
