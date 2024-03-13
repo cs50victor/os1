@@ -747,7 +747,7 @@ dependencies = [
 [[package]]
 name = "collections"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "rustc-hash",
 ]
@@ -1031,7 +1031,7 @@ dependencies = [
 [[package]]
 name = "derive_refineable"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1163,6 +1163,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.52",
+]
+
+[[package]]
+name = "env_logger"
+version = "0.10.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4cd405aab171cb85d6735e5c8d9db038c17d3ca007a4d2c25f337935c3d90580"
+dependencies = [
+ "humantime",
+ "is-terminal",
+ "log",
+ "regex",
+ "termcolor",
 ]
 
 [[package]]
@@ -1678,7 +1691,7 @@ dependencies = [
 [[package]]
 name = "gpui"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "anyhow",
  "as-raw-xcb-connection",
@@ -1757,7 +1770,7 @@ dependencies = [
 [[package]]
 name = "gpui_macros"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1865,6 +1878,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "humantime"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a3a5bfb195931eeb336b2a7b4d761daec841b97f947d34394601737a7bba5e4"
+
+[[package]]
 name = "idna"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1950,6 +1969,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "928bae27f42bc99b60d9ac7334e3a21d10ad8f1835a4e12ec3ec0464765ed1b3"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "is-terminal"
+version = "0.4.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f23ff5ef2b80d608d61efee834934d862cd92461afc0560dedf493e4c033738b"
+dependencies = [
+ "hermit-abi 0.3.9",
+ "libc",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2193,7 +2223,7 @@ checksum = "2532096657941c2fea9c289d370a250971c689d4f143798ff67113ec042024a5"
 [[package]]
 name = "media"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "anyhow",
  "bindgen",
@@ -2623,6 +2653,8 @@ name = "os1"
 version = "0.1.0"
 dependencies = [
  "gpui",
+ "log",
+ "pretty_env_logger",
 ]
 
 [[package]]
@@ -2846,6 +2878,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
+name = "pretty_env_logger"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "865724d4dbe39d9f3dd3b52b88d859d66bcb2d6a0acfd5ea68a65fb66d4bdc1c"
+dependencies = [
+ "env_logger",
+ "log",
+]
+
+[[package]]
 name = "prettyplease"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3047,7 +3089,7 @@ dependencies = [
 [[package]]
 name = "refineable"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "derive_refineable",
 ]
@@ -3593,7 +3635,7 @@ checksum = "81cdd64d312baedb58e21336b31bc043b77e01cc99033ce76ef539f78e965ebc"
 [[package]]
 name = "sum_tree"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "arrayvec 0.7.4",
  "log",
@@ -4150,7 +4192,7 @@ checksum = "09cc8ee72d2a9becf2f2febe0205bbed8fc6615b7cb429ad062dc7b7ddd036a9"
 [[package]]
 name = "util"
 version = "0.1.0"
-source = "git+https://github.com/zed-industries/zed#646f69583a96aab4d3bcecdb03a0f59b8772c93e"
+source = "git+https://github.com/zed-industries/zed#47afc70979b481eaaff64b0710925895da098128"
 dependencies = [
  "anyhow",
  "async-fs 1.6.0",
