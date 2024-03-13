@@ -1,0 +1,5 @@
+*
+!server/livekit_agents
+!requirements.txt
+
+**/__pycache__/

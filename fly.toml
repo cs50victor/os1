@@ -1,0 +1,23 @@
+# fly.toml app configuration file generated for buildspace on 2024-03-01T19:57:23-05:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'os1_livekit'
+primary_region = 'iad'
+
+[build]
+  dockerfile = 'Dockerfile.livekit'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
