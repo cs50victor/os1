@@ -5,6 +5,7 @@ on:
     paths:
       - "**/.github/workflows/ci-rs.yml"
       - "**/Cargo.lock"
+      - "**/src/**"
       - "**/Cargo.toml"
       - "**/rust-toolchain"
       - "**/.taplo.toml"
