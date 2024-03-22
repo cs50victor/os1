@@ -1,4 +1,5 @@
 # os1
 an AGI operating system
 
-> focusing on M1/M2 chips
+> [!IMPORTANT]
+> This project is currently in a very early development/experimental stage. There are a lot of unimplemented/broken features at the moment. Contributions are welcome to help out with the progress!
