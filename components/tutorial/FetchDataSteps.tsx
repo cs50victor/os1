@@ -15,7 +15,7 @@ values
 `.trim();
 
 const server = `
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '~/utils/supabase/server'
 
 export default async function Page() {
   const supabase = createClient()
@@ -28,7 +28,7 @@ export default async function Page() {
 const client = `
 'use client'
 
-import { createClient } from '@/utils/supabase/client'
+import { createClient } from '~/utils/supabase/client'
 import { useEffect, useState } from 'react'
 
 export default function Page() {
