@@ -72,6 +72,6 @@
   }
   body {
     /* @apply bg-foreground  text-background; */
-    @apply bg-[#353535]  text-background;
+    @apply bg-[#212121]  text-background;
   }
 }
