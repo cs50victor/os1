@@ -3,16 +3,21 @@ import { useState } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Input } from "./components/ui/input";
 import { Button } from "./components/ui/button";
+import { WelcomePage } from "./components/welcome";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
+  const onboarding = false
 
   const greet=async()=> {
     setGreetMsg(await invoke("greet", { name }));
   }
 
-  // bg-[#353535] 
+
+  if (onboarding){
+    return <WelcomePage/>
+  }
   return (
     <div className="h-dvh w-full flex flex-col items-center justify-center">
       <div className="space-y-4">
