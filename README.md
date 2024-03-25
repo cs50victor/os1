@@ -8,7 +8,7 @@ an AGI operating system
 
 - `git clone https://github.com/cs50victor/os1.git`
 - install Rust & Cargo if you haven't - [rust installation guide](https://www.rust-lang.org/tools/install)
-- install the tauri CLI ( cargo install tauri-cli )
+- install the tauri CLI `cargo install tauri`
 - `cd os1`
 - `cargo tauri dev`
 
