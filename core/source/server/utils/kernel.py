@@ -13,17 +13,9 @@ def get_kernel_messages():
     """
     Is this the way to do this?
     """
-    current_platform = platform.system()
-    
-    if current_platform == "Darwin":
-        process = subprocess.Popen(['syslog'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-        output, _ = process.communicate()
-        return output.decode('utf-8')
-    elif current_platform == "Linux":
-        with open('/var/log/dmesg', 'r') as file:
-            return file.read()
-    else:
-        logger.info("Unsupported platform.")
+    process = subprocess.Popen(['syslog'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    output, _ = process.communicate()
+    return output.decode('utf-8')
 
 def custom_filter(message):
     # Check for {TO_INTERPRETER{ message here }TO_INTERPRETER} pattern

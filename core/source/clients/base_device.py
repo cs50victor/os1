@@ -13,11 +13,8 @@ import json
 import traceback
 import websockets
 import queue
-import pydub
-import ast
 from pydub import AudioSegment
 from pydub.playback import play
-import io
 import time
 import wave
 import tempfile
@@ -27,7 +24,6 @@ import base64
 from interpreter import interpreter # Just for code execution. Maybe we should let people do from interpreter.computer import run?
 # In the future, I guess kernel watching code should be elsewhere? Somewhere server / client agnostic?
 from ..server.utils.kernel import put_kernel_messages_into_queue
-from ..server.utils.get_system_info import get_system_info
 from ..server.utils.process_utils import kill_process_tree
 
 from ..server.utils.logs import setup_logging
@@ -55,9 +51,6 @@ if type(CAMERA_ENABLED) == str:
     CAMERA_ENABLED = (CAMERA_ENABLED.lower() == "true")
 CAMERA_DEVICE_INDEX = int(os.getenv('CAMERA_DEVICE_INDEX', 0))
 CAMERA_WARMUP_SECONDS = float(os.getenv('CAMERA_WARMUP_SECONDS', 0))
-
-# Specify OS
-current_platform = get_system_info()
 
 # Initialize PyAudio
 p = pyaudio.PyAudio()
@@ -258,7 +251,7 @@ class Device:
                     if CAMERA_ENABLED:
                         print("\nHold the spacebar to start recording. Press 'c' to capture an image from the camera. Press CTRL-C to exit.")
                     else:
-                        print("\Hold the spacebar to start recording. Press CTRL-C to exit.")
+                        print("\nHold the spacebar to start recording. Press CTRL-C to exit.")
                         
                     asyncio.create_task(self.message_sender(websocket))
 
@@ -324,29 +317,9 @@ class Device:
 
             asyncio.create_task(self.play_audiosegments())
             
-            # If Raspberry Pi, add the button listener, otherwise use the spacebar
-            if current_platform.startswith("raspberry-pi"):
-                logger.info("Raspberry Pi detected, using button on GPIO pin 15")
-                # Use GPIO pin 15
-                pindef = ["gpiochip4", "15"] # gpiofind PIN15
-                print("PINDEF", pindef)
-
-                # HACK: needs passwordless sudo
-                process = await asyncio.create_subprocess_exec("sudo", "gpiomon", "-brf", *pindef, stdout=asyncio.subprocess.PIPE)
-                while True:
-                    line = await process.stdout.readline()
-                    if line:
-                        line = line.decode().strip()
-                        if "FALLING" in line:
-                            self.toggle_recording(False)
-                        elif "RISING" in line:
-                            self.toggle_recording(True)
-                    else:
-                        break
-            else:
-                # Keyboard listener for spacebar press/release
-                listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
-                listener.start()
+            # Keyboard listener for spacebar press/release
+            listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+            listener.start()
 
     def start(self):
         if os.getenv('TEACH_MODE') != "True":

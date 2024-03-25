@@ -1,7 +1,5 @@
 import typer
 import asyncio
-import platform
-import concurrent.futures
 import threading
 import os
 import importlib
@@ -119,21 +117,7 @@ def _run(
         tunnel_thread.start()
 
     if client:
-        if client_type == "auto":
-            system_type = platform.system()
-            if system_type == "Darwin":  # Mac OS
-                client_type = "mac"
-            elif system_type == "Linux":  # Linux System
-                try:
-                    with open('/proc/device-tree/model', 'r') as m:
-                        if 'raspberry pi' in m.read().lower():
-                            client_type = "rpi"
-                        else:
-                            client_type = "linux"
-                except FileNotFoundError:
-                    client_type = "linux"
-
-        module = importlib.import_module(f".clients.{client_type}.device", package='source')
+        module = importlib.import_module(f".clients.mac.device", package='source')
         client_thread = threading.Thread(target=module.main, args=[server_url])
         client_thread.start()
 
