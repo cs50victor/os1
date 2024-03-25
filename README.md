@@ -14,7 +14,7 @@ an AGI operating system
 
 ## Milestone
 
-- [ ] Be fully compatible with M1 / M2 / M3 macbooks.
+- [ ] Fully compatible with Apple Silicon devices.
 
 
 
