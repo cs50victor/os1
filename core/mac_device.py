@@ -4,10 +4,7 @@ load_dotenv()  # take environment variables from .env.
 import os
 import asyncio
 import threading
-import os
 import pyaudio
-from starlette.websockets import WebSocket
-from queue import Queue
 from pynput import keyboard
 import json
 import traceback
@@ -23,17 +20,17 @@ import cv2
 import base64
 from interpreter import interpreter # Just for code execution. Maybe we should let people do from interpreter.computer import run?
 # In the future, I guess kernel watching code should be elsewhere? Somewhere server / client agnostic?
-from ..server.utils.kernel import put_kernel_messages_into_queue
-from ..server.utils.process_utils import kill_process_tree
+from source.server.utils.kernel import put_kernel_messages_into_queue
+from source.server.utils.process_utils import kill_process_tree
 
-from ..server.utils.logs import setup_logging
-from ..server.utils.logs import logger
+from source.server.utils.logs import setup_logging
+from source.server.utils.logs import logger
 setup_logging()
 
 os.environ["STT_RUNNER"] = "server"
 os.environ["TTS_RUNNER"] = "server"
 
-from ..utils.accumulator import Accumulator
+from source.utils.accumulator import Accumulator
 
 accumulator = Accumulator()
 
@@ -325,3 +322,12 @@ class Device:
         if os.getenv('TEACH_MODE') != "True":
             asyncio.run(self.start_async())
             p.terminate()
+
+device = Device()
+
+def run_device(server_url):
+    device.server_url = server_url
+    device.start()
+
+if __name__ == "__main__":
+    run_device()

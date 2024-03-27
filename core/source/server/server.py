@@ -3,7 +3,6 @@ load_dotenv()  # take environment variables from .env.
 
 import traceback
 from platformdirs import user_data_dir
-import ast
 import json
 import queue
 import os
@@ -13,9 +12,7 @@ import re
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from starlette.websockets import WebSocket, WebSocketDisconnect
-from pathlib import Path
 import asyncio
-import urllib.parse
 from .utils.kernel import put_kernel_messages_into_queue
 from .i import configure_interpreter
 from interpreter import interpreter
@@ -352,7 +349,6 @@ def stream_tts(sentence):
 
 from uvicorn import Config, Server
 import os
-import platform
 from importlib import import_module
 
 # these will be overwritten
@@ -363,7 +359,7 @@ PORT = 0
 async def startup_event():
     server_url = f"{HOST}:{PORT}"
     print("")
-    print_markdown(f"\n*Ready.*\n")
+    print_markdown("\n*Ready.*\n")
     print("")
 
 @app.on_event("shutdown")

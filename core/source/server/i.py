@@ -1,11 +1,9 @@
 from dotenv import load_dotenv
 load_dotenv()  # take environment variables from .env.
 
-import os
 import glob
 import time
 import json
-from pathlib import Path
 from interpreter import OpenInterpreter
 import shutil
 

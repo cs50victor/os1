@@ -2,10 +2,10 @@ import typer
 import asyncio
 import threading
 import os
-import importlib
 from source.server.tunnel import create_tunnel
 from source.server.server import main
 from source.server.utils.local_mode import select_local_model
+from mac_device import run_device
 
 import signal
 app = typer.Typer()
@@ -117,8 +117,7 @@ def _run(
         tunnel_thread.start()
 
     if client:
-        module = importlib.import_module(f".clients.mac.device", package='source')
-        client_thread = threading.Thread(target=module.main, args=[server_url])
+        client_thread = threading.Thread(target=run_device, args=[server_url])
         client_thread.start()
 
     try:

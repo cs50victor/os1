@@ -25,4 +25,4 @@ def kill_process_tree():
     except psutil.NoSuchProcess:
         print(f"Process {pid} does not exist or is already terminated")
     except psutil.AccessDenied:
-        print(f"Permission denied to terminate some processes")
+        print("Permission denied to terminate some processes")

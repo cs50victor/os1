@@ -5,8 +5,8 @@ on:
     paths:
       - "**/.github/workflows/ci-rs.yml"
       - "**/Cargo.lock"
-      - "**/src/**"
       - "**/Cargo.toml"
+      - "**/src-tauri/**"
       - "**/rust-toolchain"
       - "**/.taplo.toml"
   workflow_dispatch:
@@ -42,8 +42,11 @@ jobs:
           components: rustfmt, clippy
           enable-sccache: "true"
 
+      - name: Install Tauri
+        run: cargo install tauri
+
       - name: Build
-        run: cargo build --release 
+        run: cargo tauri build --release 
 
       - name: Test
         run: cargo test --release 

@@ -3,10 +3,8 @@ load_dotenv()  # take environment variables from .env.
 
 import asyncio
 import subprocess
-import platform
 
 from .logs import setup_logging
-from .logs import logger
 setup_logging()
 
 def get_kernel_messages():
