@@ -4,10 +4,7 @@ load_dotenv()  # take environment variables from .env.
 import os
 import asyncio
 import threading
-import os
 import pyaudio
-from starlette.websockets import WebSocket
-from queue import Queue
 from pynput import keyboard
 import json
 import traceback

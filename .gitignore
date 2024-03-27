@@ -52,3 +52,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# python
+.cenv

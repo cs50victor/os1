@@ -1,6 +1,4 @@
 import sys
-import os
-import platform
 import subprocess
 import time
 import inquirer
@@ -20,7 +18,7 @@ def select_local_model():
         if not names:
             time.sleep(1)
             
-            interpreter.display_message(f"\nYou don't have any Ollama models downloaded. To download a new model, run `ollama run <model-name>`, then start a new 01 session. \n\n For a full list of downloadable models, check out [https://ollama.com/library](https://ollama.com/library) \n")
+            interpreter.display_message("\nYou don't have any Ollama models downloaded. To download a new model, run `ollama run <model-name>`, then start a new 01 session. \n\n For a full list of downloadable models, check out [https://ollama.com/library](https://ollama.com/library) \n")
             
             print("Please download a model then try again\n")
             time.sleep(2)
@@ -39,15 +37,15 @@ def select_local_model():
             selected_name = name_answer['name'] if name_answer else None
             
             # Set the model to the selected model
-            interpreter.llm.model = f"ollama/mistral"
+            interpreter.llm.model = "ollama/mistral"
             interpreter.display_message(f"\nUsing Ollama model: `{selected_name}` \n")
             time.sleep(1)
         
     # If Ollama is not installed or not recognized as a command, prompt the user to download Ollama and try again
-    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+    except (subprocess.CalledProcessError, FileNotFoundError):
         print("Ollama is not installed or not recognized as a command.")
         time.sleep(1)
-        interpreter.display_message(f"\nPlease visit [https://ollama.com/](https://ollama.com/) to download Ollama and try again\n")
+        interpreter.display_message("\nPlease visit [https://ollama.com/](https://ollama.com/) to download Ollama and try again\n")
         time.sleep(2)
         sys.exit(1)
             

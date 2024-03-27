@@ -2,7 +2,6 @@ import ffmpeg
 import tempfile
 from openai import OpenAI
 import os
-import tempfile
 
 client = OpenAI()
 

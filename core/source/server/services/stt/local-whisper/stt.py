@@ -10,8 +10,6 @@ import shutil
 import ffmpeg
 import subprocess
 
-import os
-import subprocess
 
 
 class Stt:
