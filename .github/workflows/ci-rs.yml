@@ -5,8 +5,8 @@ on:
     paths:
       - "**/.github/workflows/ci-rs.yml"
       - "**/Cargo.lock"
-      - "**/src/**"
       - "**/Cargo.toml"
+      - "**/src-tauri/**"
       - "**/rust-toolchain"
       - "**/.taplo.toml"
   workflow_dispatch:
@@ -39,11 +39,11 @@ jobs:
         uses: brndnmtthws/rust-action@v1
         with:
           toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy
+          components: rustfmt, clippy, tauri
           enable-sccache: "true"
 
       - name: Build
-        run: cargo build --release 
+        run: cargo tauri build --release 
 
       - name: Test
         run: cargo test --release 
