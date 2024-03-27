@@ -39,8 +39,11 @@ jobs:
         uses: brndnmtthws/rust-action@v1
         with:
           toolchain: ${{ matrix.rust-toolchain }}
-          components: rustfmt, clippy, tauri
+          components: rustfmt, clippy
           enable-sccache: "true"
+
+      - name: Install Tauri
+        run: cargo install tauri
 
       - name: Build
         run: cargo tauri build --release 
