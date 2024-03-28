@@ -159,12 +159,12 @@ class BuildspaceAI:
         for match in data:
             print("data", data)
             print("match", match)
-            contextText += f"Title of Demo Day Submission: {match["title"]}\
+            contextText += f'Title of Demo Day Submission: {match["title"]}\
                 Niche: {match["niche"]}\
                 Summary: {match["description"]} \
                 Full Description: {match["youtube_transcript"]} \
                 Social: {match["social"]} \
-                Buildspace Season: {match["season"]}"
+                Buildspace Season: {match["season"]}'
         
         contextText+=f"\nuser's message: {msg}"
         

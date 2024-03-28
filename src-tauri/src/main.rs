@@ -8,8 +8,8 @@ use tauri::{
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
+fn get_env(name: &str) -> String {
+    std::env::var(String::from(name)).unwrap_or(String::from(""))
 }
 
 const links: [(&str, &str, &str); 2] = [
@@ -19,6 +19,8 @@ const links: [(&str, &str, &str); 2] = [
 ];
 
 fn main() {
+    dotenvy::dotenv().expect(".env file not found");
+
     let sub_menu_github = {
         let mut menu = SystemTrayMenu::new();
         for (id, label, _url) in
@@ -41,7 +43,7 @@ fn main() {
     let tray = SystemTray::new().with_menu(tray_menu);
 
     let mut app = tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![get_env])
         .system_tray(tray)
         .on_system_tray_event(on_system_tray_event)
         .build(tauri::generate_context!())
