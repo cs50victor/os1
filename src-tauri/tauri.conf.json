@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "os1",
+    "productName": "OS1",
     "version": "0.0.0"
   },
   "tauri": {
@@ -25,7 +25,7 @@
     },
     "windows": [
       {
-        "title": "os1",
+        "title": "OS1",
         "width": 800,
         "height": 600
       }
