@@ -23,11 +23,12 @@ pub async fn server() -> anyhow::Result<()>{
     );
 
     // !! this doesn't listen on any local ports (super cool)
-    axum::Server::builder(start_tunnel().await?)
+    let tunnel = start_tunnel().await?;
+    let _server_url = tunnel.url();
+    axum::Server::builder(tunnel)
         .serve(app.into_make_service_with_connect_info::<SocketAddr>())
-        .await
-        .unwrap();
-    
+        .await?;
+
     Ok(())
 }
 

@@ -21,11 +21,6 @@ import base64
 from interpreter import interpreter # Just for code execution. Maybe we should let people do from interpreter.computer import run?
 # In the future, I guess kernel watching code should be elsewhere? Somewhere server / client agnostic?
 from source.server.utils.kernel import put_kernel_messages_into_queue
-from source.server.utils.process_utils import kill_process_tree
-
-from source.server.utils.logs import setup_logging
-from source.server.utils.logs import logger
-setup_logging()
 
 os.environ["STT_RUNNER"] = "server"
 os.environ["TTS_RUNNER"] = "server"
@@ -217,7 +212,8 @@ class Device:
             self.toggle_recording(True)
         elif {keyboard.Key.ctrl, keyboard.KeyCode.from_char('c')} <= self.pressed_keys:
             logger.info("Ctrl+C pressed. Exiting...")
-            kill_process_tree()
+            # kill_children is called before tauri app exists
+            # https://docs.rs/tauri/latest/src/tauri/api/process/command.rs.html#39
             os._exit(0)
 
     def on_release(self, key):

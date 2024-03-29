@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod server;
+mod device;
 
 use server::server;
 use tauri::{

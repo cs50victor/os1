@@ -17,8 +17,6 @@ from .utils.kernel import put_kernel_messages_into_queue
 from .i import configure_interpreter
 from interpreter import interpreter
 from ..utils.accumulator import Accumulator
-from .utils.logs import setup_logging
-from .utils.logs import logger
 
 from ..utils.print_markdown import print_markdown
 
@@ -34,8 +32,6 @@ print("")
 print_markdown(markdown)
 print("")
 
-
-setup_logging()
 
 accumulator = Accumulator()
 
