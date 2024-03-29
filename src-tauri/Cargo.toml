@@ -15,6 +15,13 @@ tauri = { version = "1", features = [ "window-maximize", "window-hide", "window-
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 dotenvy = "0.15.7"
+anyhow = "1.0.81"
+log = "0.4.21"
+futures = "0.3.30"
+ngrok = { version = "0.13.1", features = ["axum"] }
+tokio = { version = "1.37.0", features = ["rt-multi-thread", "macros"] }
+pretty_env_logger = "0.5.0"
+axum = { version = "0.6.4", features = ["tokio"] }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!

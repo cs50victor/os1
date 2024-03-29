@@ -1,6 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod server;
+
+use server::server;
 use tauri::{
     api::shell::open, AppHandle, CustomMenuItem, Manager, SystemTray, SystemTrayEvent,
     SystemTrayMenu, SystemTrayMenuItem, SystemTraySubmenu,
@@ -46,6 +49,10 @@ fn main() {
         .invoke_handler(tauri::generate_handler![get_env])
         .system_tray(tray)
         .on_system_tray_event(on_system_tray_event)
+        .setup(|app|{
+            tauri::async_runtime::spawn(server());
+            Ok(())
+        })
         .build(tauri::generate_context!())
         .expect("error while running tauri application");
 
