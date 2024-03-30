@@ -83,7 +83,7 @@ class Device:
         cap.release()
 
         return image_path
-    
+
 
     def encode_image_to_base64(self, image_path):
         """Encodes an image file to a base64 string."""
@@ -109,7 +109,7 @@ class Device:
             self.add_image_to_send_queue(image_path)
         self.captured_images.clear()  # Clear the list after sending
 
-        
+
     async def play_audiosegments(self):
         """Plays them sequentially."""
         while True:
@@ -126,7 +126,7 @@ class Device:
 
 
     def record_audio(self):
-        
+
         if os.getenv('STT_RUNNER') == "server":
             # STT will happen on the server. we're sending audio.
             send_queue.put({"role": "user", "type": "audio", "format": "bytes.wav", "start": True})
@@ -225,7 +225,7 @@ class Device:
         elif CAMERA_ENABLED and key == keyboard.KeyCode.from_char('c'):
             self.fetch_image_from_camera()
 
-    
+
     async def message_sender(self, websocket):
         while True:
             message = await asyncio.get_event_loop().run_in_executor(None, send_queue.get)
@@ -245,7 +245,7 @@ class Device:
                         print("\nHold the spacebar to start recording. Press 'c' to capture an image from the camera. Press CTRL-C to exit.")
                     else:
                         print("\nHold the spacebar to start recording. Press CTRL-C to exit.")
-                        
+
                     asyncio.create_task(self.message_sender(websocket))
 
                     while True:
@@ -309,7 +309,7 @@ class Device:
                 asyncio.create_task(put_kernel_messages_into_queue(send_queue))
 
             asyncio.create_task(self.play_audiosegments())
-            
+
             # Keyboard listener for spacebar press/release
             listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
             listener.start()

@@ -16,6 +16,9 @@
     },
     "allowlist": {
       "all": false,
+      "globalShortcut": {
+        "all": true
+      },
       "shell": {
         "all": true,
         "execute": true,
