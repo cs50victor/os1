@@ -3,15 +3,27 @@ load_dotenv()  # take environment variables from .env.
 
 import asyncio
 import subprocess
+import platform
 
+from .logs import setup_logging
+from .logs import logger
+setup_logging()
 
 def get_kernel_messages():
     """
     Is this the way to do this?
     """
-    process = subprocess.Popen(['syslog'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
-    output, _ = process.communicate()
-    return output.decode('utf-8')
+    current_platform = platform.system()
+    
+    if current_platform == "Darwin":
+        process = subprocess.Popen(['syslog'], stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+        output, _ = process.communicate()
+        return output.decode('utf-8')
+    elif current_platform == "Linux":
+        with open('/var/log/dmesg', 'r') as file:
+            return file.read()
+    else:
+        logger.info("Unsupported platform.")
 
 def custom_filter(message):
     # Check for {TO_INTERPRETER{ message here }TO_INTERPRETER} pattern
@@ -33,6 +45,10 @@ last_messages = ""
 
 def check_filtered_kernel():
     messages = get_kernel_messages()
+    if messages is None:
+        return ""  # Handle unsupported platform or error in fetching kernel messages
+
+    global last_messages
     messages.replace(last_messages, "")
     messages = messages.split("\n")
     
@@ -42,6 +58,7 @@ def check_filtered_kernel():
             filtered_messages.append(message)
     
     return "\n".join(filtered_messages)
+
 
 async def put_kernel_messages_into_queue(queue):
     while True:

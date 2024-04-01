@@ -1,9 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![feature(string_remove_matches)]
 
 mod device;
 mod server;
 mod system_tray;
+mod accumulator;
+mod kernel;
 
 use device::Device;
 use ngrok::tunnel::UrlTunnel;
@@ -22,8 +25,12 @@ fn get_env(name: &str) -> String {
 fn main() {
     dotenvy::dotenv().expect(".env file not found");
 
-    let http_tunnel = futures::executor::block_on(start_tunnel()).unwrap();
-    let server_url = http_tunnel.url().to_owned();
+    //! static_ngrok_domain
+    let server_url = "https://balanced-tiger-hardy.ngrok-free.app".to_string();
+    
+    // TODO : uncomment and use later, after open-interpreter core rewrite in rust
+    // let http_tunnel = futures::executor::block_on(start_tunnel()).unwrap();
+    // let server_url = http_tunnel.url().to_owned();
 
     let mut app = tauri::Builder::default()
         .manage(Device::new(server_url))

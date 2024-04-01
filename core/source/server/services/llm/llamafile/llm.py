@@ -54,8 +54,9 @@ class Llm:
             wget.download(url, llamafile_path)
 
         # Make the new llamafile executable
-        st = os.stat(llamafile_path)
-        os.chmod(llamafile_path, st.st_mode | stat.S_IEXEC)
+        if platform.system() != "Windows":
+            st = os.stat(llamafile_path)
+            os.chmod(llamafile_path, st.st_mode | stat.S_IEXEC)
 
         # Run the new llamafile in the background
         if os.path.exists(llamafile_path):

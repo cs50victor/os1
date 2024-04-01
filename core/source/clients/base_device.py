@@ -4,28 +4,41 @@ load_dotenv()  # take environment variables from .env.
 import os
 import asyncio
 import threading
+import os
 import pyaudio
+from starlette.websockets import WebSocket
+from queue import Queue
 from pynput import keyboard
 import json
 import traceback
 import websockets
 import queue
+import pydub
+import ast
 from pydub import AudioSegment
 from pydub.playback import play
+import io
 import time
 import wave
 import tempfile
 from datetime import datetime
 import cv2
 import base64
+import platform
 from interpreter import interpreter # Just for code execution. Maybe we should let people do from interpreter.computer import run?
 # In the future, I guess kernel watching code should be elsewhere? Somewhere server / client agnostic?
-from source.server.utils.kernel import put_kernel_messages_into_queue
+from ..server.utils.kernel import put_kernel_messages_into_queue
+from ..server.utils.get_system_info import get_system_info
+from ..server.utils.process_utils import kill_process_tree
+
+from ..server.utils.logs import setup_logging
+from ..server.utils.logs import logger
+setup_logging()
 
 os.environ["STT_RUNNER"] = "server"
 os.environ["TTS_RUNNER"] = "server"
 
-from source.utils.accumulator import Accumulator
+from ..utils.accumulator import Accumulator
 
 accumulator = Accumulator()
 
@@ -43,6 +56,10 @@ if type(CAMERA_ENABLED) == str:
     CAMERA_ENABLED = (CAMERA_ENABLED.lower() == "true")
 CAMERA_DEVICE_INDEX = int(os.getenv('CAMERA_DEVICE_INDEX', 0))
 CAMERA_WARMUP_SECONDS = float(os.getenv('CAMERA_WARMUP_SECONDS', 0))
+
+# Specify OS
+current_platform = get_system_info()
+is_win10 = lambda: platform.system() == "Windows" and "10" in platform.version()
 
 # Initialize PyAudio
 p = pyaudio.PyAudio()
@@ -212,8 +229,7 @@ class Device:
             self.toggle_recording(True)
         elif {keyboard.Key.ctrl, keyboard.KeyCode.from_char('c')} <= self.pressed_keys:
             logger.info("Ctrl+C pressed. Exiting...")
-            # kill_children is called before tauri app exists
-            # https://docs.rs/tauri/latest/src/tauri/api/process/command.rs.html#39
+            kill_process_tree()
             os._exit(0)
 
     def on_release(self, key):
@@ -238,65 +254,79 @@ class Device:
 
     async def websocket_communication(self, WS_URL):
         show_connection_log = True
-        while True:
+
+        async def exec_ws_communication(websocket):
+            if CAMERA_ENABLED:
+                print("\nHold the spacebar to start recording. Press 'c' to capture an image from the camera. Press CTRL-C to exit.")
+            else:
+                print("\nHold the spacebar to start recording. Press CTRL-C to exit.")
+
+            asyncio.create_task(self.message_sender(websocket))
+
+            while True:
+                await asyncio.sleep(0.01)
+                chunk = await websocket.recv()
+
+                logger.debug(f"Got this message from the server: {type(chunk)} {chunk}")
+
+                if type(chunk) == str:
+                    chunk = json.loads(chunk)
+
+                message = accumulator.accumulate(chunk)
+                if message == None:
+                    # Will be None until we have a full message ready
+                    continue
+
+                # At this point, we have our message
+
+                if message["type"] == "audio" and message["format"].startswith("bytes"):
+
+                    # Convert bytes to audio file
+
+                    audio_bytes = message["content"]
+
+                    # Create an AudioSegment instance with the raw data
+                    audio = AudioSegment(
+                        # raw audio data (bytes)
+                        data=audio_bytes,
+                        # signed 16-bit little-endian format
+                        sample_width=2,
+                        # 16,000 Hz frame rate
+                        frame_rate=16000,
+                        # mono sound
+                        channels=1
+                    )
+
+                    self.audiosegments.append(audio)
+
+                # Run the code if that's the client's job
+                if os.getenv('CODE_RUNNER') == "client":
+                    if message["type"] == "code" and "end" in message:
+                        language = message["format"]
+                        code = message["content"]
+                        result = interpreter.computer.run(language, code)
+                        send_queue.put(result)
+
+        if is_win10():
+            logger.info('Windows 10 detected')
+            # Workaround for Windows 10 not latching to the websocket server.
+            # See https://github.com/OpenInterpreter/01/issues/197
             try:
-                async with websockets.connect(WS_URL) as websocket:
-                    if CAMERA_ENABLED:
-                        print("\nHold the spacebar to start recording. Press 'c' to capture an image from the camera. Press CTRL-C to exit.")
-                    else:
-                        print("\nHold the spacebar to start recording. Press CTRL-C to exit.")
-
-                    asyncio.create_task(self.message_sender(websocket))
-
-                    while True:
-                        await asyncio.sleep(0.01)
-                        chunk = await websocket.recv()
-
-                        logger.debug(f"Got this message from the server: {type(chunk)} {chunk}")
-
-                        if type(chunk) == str:
-                            chunk = json.loads(chunk)
-
-                        message = accumulator.accumulate(chunk)
-                        if message == None:
-                            # Will be None until we have a full message ready
-                            continue
-
-                        # At this point, we have our message
-
-                        if message["type"] == "audio" and message["format"].startswith("bytes"):
-
-                            # Convert bytes to audio file
-
-                            audio_bytes = message["content"]
-
-                            # Create an AudioSegment instance with the raw data
-                            audio = AudioSegment(
-                                # raw audio data (bytes)
-                                data=audio_bytes,
-                                # signed 16-bit little-endian format
-                                sample_width=2,
-                                # 16,000 Hz frame rate
-                                frame_rate=16000,
-                                # mono sound
-                                channels=1
-                            )
-
-                            self.audiosegments.append(audio)
-
-                        # Run the code if that's the client's job
-                        if os.getenv('CODE_RUNNER') == "client":
-                            if message["type"] == "code" and "end" in message:
-                                language = message["format"]
-                                code = message["content"]
-                                result = interpreter.computer.run(language, code)
-                                send_queue.put(result)
-            except:
-                logger.debug(traceback.format_exc())
-                if show_connection_log:
-                  logger.info(f"Connecting to `{WS_URL}`...")
-                  show_connection_log = False
-                await asyncio.sleep(2)
+                ws = websockets.connect(WS_URL)
+                await exec_ws_communication(ws)
+            except Exception as e:
+                logger.error(f"Error while attempting to connect: {e}")
+        else:
+            while True:
+                try:
+                    async with websockets.connect(WS_URL) as websocket:
+                        await exec_ws_communication(websocket)
+                except:
+                    logger.debug(traceback.format_exc())
+                    if show_connection_log:
+                        logger.info(f"Connecting to `{WS_URL}`...")
+                        show_connection_log = False
+                        await asyncio.sleep(2)
 
     async def start_async(self):
             # Configuration for WebSocket
@@ -310,20 +340,31 @@ class Device:
 
             asyncio.create_task(self.play_audiosegments())
 
-            # Keyboard listener for spacebar press/release
-            listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
-            listener.start()
+            # If Raspberry Pi, add the button listener, otherwise use the spacebar
+            if current_platform.startswith("raspberry-pi"):
+                logger.info("Raspberry Pi detected, using button on GPIO pin 15")
+                # Use GPIO pin 15
+                pindef = ["gpiochip4", "15"] # gpiofind PIN15
+                print("PINDEF", pindef)
+
+                # HACK: needs passwordless sudo
+                process = await asyncio.create_subprocess_exec("sudo", "gpiomon", "-brf", *pindef, stdout=asyncio.subprocess.PIPE)
+                while True:
+                    line = await process.stdout.readline()
+                    if line:
+                        line = line.decode().strip()
+                        if "FALLING" in line:
+                            self.toggle_recording(False)
+                        elif "RISING" in line:
+                            self.toggle_recording(True)
+                    else:
+                        break
+            else:
+                # Keyboard listener for spacebar press/release
+                listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+                listener.start()
 
     def start(self):
         if os.getenv('TEACH_MODE') != "True":
             asyncio.run(self.start_async())
             p.terminate()
-
-device = Device()
-
-def run_device(server_url):
-    device.server_url = server_url
-    device.start()
-
-if __name__ == "__main__":
-    run_device()

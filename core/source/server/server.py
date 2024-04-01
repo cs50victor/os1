@@ -3,6 +3,7 @@ load_dotenv()  # take environment variables from .env.
 
 import traceback
 from platformdirs import user_data_dir
+import ast
 import json
 import queue
 import os
@@ -12,11 +13,15 @@ import re
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 from starlette.websockets import WebSocket, WebSocketDisconnect
+from pathlib import Path
 import asyncio
+import urllib.parse
 from .utils.kernel import put_kernel_messages_into_queue
 from .i import configure_interpreter
 from interpreter import interpreter
 from ..utils.accumulator import Accumulator
+from .utils.logs import setup_logging
+from .utils.logs import logger
 
 from ..utils.print_markdown import print_markdown
 
@@ -32,6 +37,8 @@ print("")
 print_markdown(markdown)
 print("")
 
+
+setup_logging()
 
 accumulator = Accumulator()
 
@@ -355,7 +362,7 @@ PORT = 0
 async def startup_event():
     server_url = f"{HOST}:{PORT}"
     print("")
-    print_markdown("\n*Ready.*\n")
+    print_markdown(f"\n*Ready.*\n")
     print("")
 
 @app.on_event("shutdown")

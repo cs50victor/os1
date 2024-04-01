@@ -1,5 +1,6 @@
-use std::{collections::VecDeque, str::FromStr, sync::Arc, time::Duration};
+// TODO: optimize file later, 
 
+use std::{collections::VecDeque, str::FromStr, sync::Arc, time::Duration};
 use ezsockets::{client::ClientCloseMode, Client, ClientConfig, CloseFrame, MessageStatus, RawMessage, SocketConfig, WSError};
 use nokhwa::{pixel_format::RgbFormat, utils::{CameraIndex, RequestedFormat}, Camera};
 use image::{EncodableLayout, ImageBuffer, ImageOutputFormat, Pixel, Rgba, RgbaImage};
@@ -9,23 +10,23 @@ use base64::{engine::general_purpose, Engine};
 use serde_json::{json, Value};
 use log::{error, info};
 use axum::async_trait;
+use ringbuf::HeapRb;
 use tauri::Url;
 
 pub struct Device {
-    // ws_client: Arc<Client<WsClient>>,
-    // vector of base64 images
     is_recording: bool,
+    is_speaking: bool,
     camera: Camera,
     captured_images: VecDeque<ImageBuffer<Rgb<u8>, Vec<u8>>>,
-    input_stream: Stream,
-    output_stream: Stream,
+    audio_input_stream: Stream,
+    audio_output_stream: Stream,
     send_queue_tx: UnboundedSender<String>
 }
 
 struct WsClient {
     send_queue_tx: UnboundedSender<String>,
+    audio_producer: Producer<f32, Arc<SharedRb<f32, Vec<MaybeUninit<f32>>>>>
 }
-
 
 #[async_trait]
 impl ezsockets::ClientExt for WsClient {
@@ -41,11 +42,18 @@ impl ezsockets::ClientExt for WsClient {
             };
         }
 
+        // if message type is code, run code using open interpreter
         Ok(())
     }
 
     async fn on_binary(&mut self, bytes: Vec<u8>) -> Result<(), ezsockets::Error> {
         info!("received bytes: {bytes:?}");
+        // when you receive audio bytes
+        // do some audio conversion to match sample width, frame_rate, and channels
+        // send to output stream
+        
+        self.audio_producer.push().unwrap();
+
         Ok(())
     }
 
@@ -106,10 +114,14 @@ impl Device {
 
         let (send_queue_tx, send_queue_rx) = unbounded_channel::<String>();
 
-        let (ws_client, _) =
-            ezsockets::connect(|_client| WsClient { send_queue_tx }, config).await;
-
         tokio::spawn(message_sender(send_queue_rx, Arc::new(ws_client)));
+
+        // first camera in system
+        let index = CameraIndex::Index(0);
+        // request the absolute highest resolution CameraFormat that can be decoded to RGB.
+        let requested = RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
+        // make the camera
+        let mut camera = Camera::new(index, requested).unwrap();
 
         let host = cpal::default_host();
         let input_device = host.default_input_device().unwrap();
@@ -120,28 +132,42 @@ impl Device {
 
         let config: cpal::StreamConfig = input_device.default_input_config()?.into();
 
-        let input_data_fn = move |data: &[f32], _: &cpal::InputCallbackInfo| {
-
-        };
-
-        let output_data_fn = move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-        };
-
         fn err_fn(err: cpal::StreamError) {
             error!("an error occurred on stream: {}", err);
         }
 
-        let input_stream = input_device.build_input_stream(&config, input_data_fn, err_fn, None)?;
-        let output_stream = output_device.build_output_stream(&config, output_data_fn, err_fn, None)?;
+        let audio_input_callback = move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            // convert to wav format
+            // transcribe locally or send to server
+            //
+        };
 
-        // first camera in system
-        let index = CameraIndex::Index(0);
-        // request the absolute highest resolution CameraFormat that can be decoded to RGB.
-        let requested = RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
-        // make the camera
-        let mut camera = Camera::new(index, requested).unwrap();
+        let audio_input_stream = input_device.build_input_stream(&config, audio_input_callback, err_fn, None)?;
 
-        Ok(Self { captured_images: VecDeque::new(), send_queue_tx, camera, is_recording: false, input_stream, output_stream })
+        let audio_output_latency_ms = 50.0_f32;
+        let latency_frames = (audio_output_latency_ms / 1_000.0) * config.sample_rate.0 as f32;
+        let latency_samples = latency_frames as usize * config.channels as usize;
+
+        let mut audio_ring = HeapRb::<f32>::new(latency_samples * 1.5);
+        let (mut audio_producer, mut audio_consumer) = audio_ring.split();
+
+        let output_data_callback = move | data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+            // feed audio from eleven labs / websocket
+            for sample in data {
+                *sample = match audio_consumer.pop() {
+                    Some(s) => s,
+                    None => 0.0
+                };
+            }
+        };
+
+        let (ws_client, _) =
+            ezsockets::connect(|_client| WsClient { send_queue_tx, audio_producer }, config).await;
+        let audio_output_stream = output_device.build_output_stream(&config, output_data_callback, err_fn, None)?;
+
+        audio_output_stream.play();
+
+        Ok(Self { captured_images: VecDeque::new(), send_queue_tx, camera, is_recording: false, is_speaking: true, audio_input_stream, audio_output_stream })
     }
 
     pub fn fetch_image_from_camera(&mut self){
@@ -180,12 +206,30 @@ impl Device {
 
     pub fn toggle_recording(&mut self){
         if self.is_recording {
-            self.input_stream.pause();
+            self.audio_input_stream.pause();
+            info!("Recording stopped.");
         }
         else {
-            self.input_stream.play();
+            self.audio_input_stream.play();
+            info!("Recording started... ")
         }
         self.is_recording = !self.is_recording
+    }
+
+    pub fn toggle_speaking(&mut self){
+        if self.is_speaking {
+            self.audio_output_stream.pause();
+            info!("Speaking stopped.");
+        }
+        else {
+            self.audio_output_stream.play();
+            info!("Speaking started... ")
+        }
+        self.is_speaking = !self.is_speaking
+    }
+
+    pub fn send_message_to_server(&self) -> anyhow::Result<(), String>{
+        self.send_queue_tx.send(message).map_err(|e| format!("Couldn't send message to OS1 server. Reason {e}"))
     }
 
 }
@@ -198,68 +242,5 @@ async fn message_sender(mut send_queue_rx: UnboundedReceiver<String>, ws_client:
     }
 }
 
-fn put_kernel_messages_into_queue(mut send_queue_rx: UnboundedReceiver<String>){
-
-}
-
 fn record_audio(){
 }
-
-fn play_audiosegments() -> anyhow::Result<()>{
-
-    Ok(())
-}
-
-
-// for client ? ... later
-// fn run_device(server_url: String) -> anyhow::Result<()>{
-//     let mut device = Device::create_with_server_url(server_url);
-//     device.start()
-// }
-
-//** Device Logic to the best of my knowledge
-//** ----------------------------------------
-
-//**   1. Start
-//**      - if 'TEACH_MODE' env variable is set to "True", don't do anything / quit
-
-//**   2. make websocket connection to server_url
-//**      - spawn task to receive data from [send_queue] and send it to server using websocket
-//**      - log messages received from server
-//**      - [accumulate] websocket message chunks
-//**      - if message type if audio, convert and append audio bytes to [audiosegments]
-//**      - if 'CODE_RUNNER' env variable is set to "True", check if websocket message is code to be executed by interpreter
-//**        - send interpreter result to [send_queue]
-
-//**   3. if 'CODE_RUNNER' env variable is set to "True" start [put_kernel_messages_into_queue] into [send_queue]
-//**        - [[put_kernel_messages_into_queue]]
-//**            - stream syslog, filter for open_interpreter messages and send to queue
-
-//**   4. start thread to play audio ([play_audiosegments]) from [audiosegments]
-//**      - play audio sequentially
-//**      - on_release -
-
-//**   5. start listening to keyboard for spacebar press/release
-//**      - on_release -
-//**        - if spacebar - [toggle_recording]
-//**        - [[[toggle_recording]]]
-//**            - some logic to toggle recording flag if
-//**            - if recording is true. start thread to [record_audio]
-//**            - [[[record_audio]]]
-//**                - use env variables to determine if STT will run on server or on client
-//**                - stream audio to server or transcribe on device
-//**                - get all captured images, convert all to base64 png images, and add to each **sequentially** to [send_queue]
-//**                - add audio bytes or transcribed text to [send_queue]
-//**        - if CAMERA_ENABLED & 'c' key - [fetch_image_from_camera]()
-//**        - [[[fetch_image_from_camera]]]
-//**            - capture image from camera and append it to self.captured_images array
-//**      - on_press
-//**        - if spacebar - [toggle_recording]
-
-
-//**     TLDR
-//**     - fetch images from camera, store in array, and encode to base64
-//**     - play audio
-//**     - record audio
-//**     - toggle recording
-//**     - send message from queue to websocket
