@@ -1,5 +1,3 @@
-from source.server.utils.local_mode import select_local_model
-from source.server.tunnel import create_tunnel
 from source.server.server import main
 import asyncio
 import signal
