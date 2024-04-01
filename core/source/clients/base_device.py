@@ -4,20 +4,14 @@ load_dotenv()  # take environment variables from .env.
 import os
 import asyncio
 import threading
-import os
 import pyaudio
-from starlette.websockets import WebSocket
-from queue import Queue
 from pynput import keyboard
 import json
 import traceback
 import websockets
 import queue
-import pydub
-import ast
 from pydub import AudioSegment
 from pydub.playback import play
-import io
 import time
 import wave
 import tempfile

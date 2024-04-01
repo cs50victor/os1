@@ -10,9 +10,6 @@ import shutil
 import ffmpeg
 import subprocess
 
-import os
-import subprocess
-import platform
 import urllib.request
 
 

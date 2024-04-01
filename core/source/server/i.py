@@ -1,11 +1,9 @@
 from dotenv import load_dotenv
 load_dotenv()  # take environment variables from .env.
 
-import os
 import glob
 import time
 import json
-from pathlib import Path
 from interpreter import OpenInterpreter
 import shutil
 
@@ -295,7 +293,6 @@ def configure_interpreter(interpreter: OpenInterpreter):
     #     if chunk.get("format") != "active_line":
     #         print(chunk.get("content"))
 
-    import os
 
     from platformdirs import user_data_dir
 

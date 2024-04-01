@@ -1,4 +1,3 @@
-import os
 import platform
 
 def get_system_info():
